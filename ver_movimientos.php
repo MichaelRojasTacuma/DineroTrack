@@ -33,22 +33,23 @@ if (isset($_POST['usuario_id'])) {
         $movimientos = $stmt->fetchAll();
 
         // Calcular total de ingresos
-        $total_ingresos_stmt = $pdo->prepare("SELECT SUM(cantidad) AS total FROM control_financiero WHERE usuario_id = :usuario_id AND tipo_id = 1"); // 1 para ingresos
+        // Calcular total de ingresos
+        $total_ingresos_stmt = $pdo->prepare("SELECT SUM(cantidad) AS total FROM control_financiero WHERE usuario_id = :usuario_id AND tipo_id = 1");
         $total_ingresos_stmt->execute(['usuario_id' => $usuario_id]);
-        $total_ingresos = $total_ingresos_stmt->fetchColumn();
+        $total_ingresos = $total_ingresos_stmt->fetchColumn() ?: 0;
 
         // Calcular total de gastos
-        $total_gastos_stmt = $pdo->prepare("SELECT SUM(cantidad) AS total FROM control_financiero WHERE usuario_id = :usuario_id AND tipo_id = 2"); // 2 para gastos
+        $total_gastos_stmt = $pdo->prepare("SELECT FORMAT(SUM(cantidad), 0, 'de_DE') AS total FROM control_financiero WHERE usuario_id = :usuario_id AND tipo_id = 2"); // 2 para gastos
         $total_gastos_stmt->execute(['usuario_id' => $usuario_id]);
         $total_gastos = $total_gastos_stmt->fetchColumn();
 
         // Calcular total de ahorros
-        $total_ahorros_stmt = $pdo->prepare("SELECT SUM(cantidad) AS total FROM control_financiero WHERE usuario_id = :usuario_id AND tipo_id = 3"); // 3 para ahorros
+        $total_ahorros_stmt = $pdo->prepare("SELECT SUM(cantidad) AS total FROM control_financiero WHERE usuario_id = :usuario_id AND tipo_id = 3");
         $total_ahorros_stmt->execute(['usuario_id' => $usuario_id]);
-        $total_ahorros = $total_ahorros_stmt->fetchColumn();
+        $total_ahorros = $total_ahorros_stmt->fetchColumn() ?: 0;
 
         // Calcular total de retiros
-        $total_retiros_stmt = $pdo->prepare("SELECT SUM(cantidad) AS total FROM control_financiero WHERE usuario_id = :usuario_id AND tipo_id = 4"); // 4 para retiros
+        $total_retiros_stmt = $pdo->prepare("SELECT FORMAT(SUM(cantidad), 0, 'de_DE') AS total FROM control_financiero WHERE usuario_id = :usuario_id AND tipo_id = 4"); // 4 para retiros
         $total_retiros_stmt->execute(['usuario_id' => $usuario_id]);
         $total_retiros = $total_retiros_stmt->fetchColumn();
         
@@ -87,6 +88,7 @@ if (isset($_POST['accion'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ver Movimientos</title>
     <link rel="stylesheet" href="styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 </head>
 <body>
     <h2>Ver Movimientos</h2>
@@ -121,7 +123,7 @@ if (isset($_POST['accion'])) {
                 <?php foreach ($movimientos as $movimiento): ?>
                     <tr>
                         <td><?php echo htmlspecialchars($movimiento['tipo_nombre']); ?></td>
-                        <td><?php echo htmlspecialchars($movimiento['cantidad']); ?></td>
+                        <td><?php echo number_format($movimiento['cantidad'], 0, ',', '.'); ?> COP</td>
                         <td><?php echo htmlspecialchars($movimiento['descripcion']); ?></td>
                         <td><?php echo htmlspecialchars($movimiento['fecha']); ?></td>
                         <td><?php echo htmlspecialchars($movimiento['categoria_nombre'] ?? 'N/A'); ?></td>
@@ -130,11 +132,11 @@ if (isset($_POST['accion'])) {
             </tbody>
         </table>
 
-        <h4>Total de Ingresos: <?php echo htmlspecialchars($total_ingresos ?? 0); ?></h4>
-        <h4>Total de Gastos: <?php echo htmlspecialchars($total_gastos ?? 0); ?></h4>
-        <h4>Total de Ahorros: <?php echo htmlspecialchars($total_ahorros ?? 0); ?></h4>
-        <h4>Total Global: <?php echo htmlspecialchars($total_global ?? 0); ?></h4>
-        <h4>Resultado (Total Global - Total Retiros): <?php echo htmlspecialchars(($total_global ?? 0) - ($total_retiros ?? 0)); ?></h4>
+        <h4>Total de Ingresos: <?php echo $total_ingresos; ?> COP</h4>
+        <h4>Total de Gastos: <?php echo $total_gastos; ?> COP</h4>
+        <h4>Total de Ahorros: <?php echo $total_ahorros; ?> COP</h4>
+        <?php echo "<h4>Total Global: " . number_format($total_global, 0, ',', '.') . " COP</h4>";?>
+        <h4>Resultado (Total Global - Total Retiros): <?php echo number_format(($total_global ?? 0) - ($total_retiros ?? 0), 0, ',', '.'); ?> COP</h4>
         
         <!-- Formularios para gestionar ahorros -->
         <h3>Registrar Ahorro</h3>
@@ -163,5 +165,6 @@ if (isset($_POST['accion'])) {
             <p>No hay movimientos registrados para este usuario.</p>
         <?php endif; ?>
     <?php endif; ?>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 </body>
 </html>
